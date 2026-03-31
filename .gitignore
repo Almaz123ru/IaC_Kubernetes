@@ -24,6 +24,7 @@ override.tf.json
 # -----------------------------
 *.pkrvars.hcl
 packer_cache/
+packer/variables.pkr.hcl
 *.log
 
 # -----------------------------
