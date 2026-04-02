@@ -8,30 +8,32 @@ packer {
 }
 
 source "proxmox-iso" "ubuntu-server-noble-numbat" {
- 
+
     # Proxmox Connection Settings
-    proxmox_url = "${var.proxmox_api_url}"
-    username = "${var.proxmox_api_token_id}"
-    token = "${var.proxmox_api_token_secret}"
+    proxmox_url = var.proxmox_api_url
+    username = var.proxmox_api_token_id
+    token = var.proxmox_api_token_secret
 
     # (Optional) Skip TLS Verification
     insecure_skip_tls_verify = true
-    
+
     # VM General Settings
-    node = "REDACTED-NODE"
-    vm_id = "199"
-    vm_name = "ubuntu-server-noble-numbat"
-    template_description = "Noble Numbat"
+    node                 = "pve"
+    vm_name              = "ubuntu-24-template"
+    template_description = "ubuntu-24-cloudinit-template"
 
     # VM OS Settings
     # (Option 1) Local ISO File
-    iso_file = "local:iso/ubuntu-24.04-live-server-amd64.iso"
-    # - or -
+    boot_iso{
+        # VM OS Settings
+        # (Option 1) Local ISO File
+        iso_file         = "local:iso/ubuntu-24.04.4-live-server-amd64.iso"
+        iso_storage_pool = "local"
+    }
+        # - or -
     # (Option 2) Download ISO
     # iso_url = "https://releases.ubuntu.com/22.04/ubuntu-22.04-live-server-amd64.iso"
     # iso_checksum = "84aeaf7823c8c61baa0ae862d0a06b03409394800000b3235854a6b38eb4856f"
-    iso_storage_pool = "local"
-    unmount_iso = true
     template_name        = "packer-ubuntu2404"
 
     # VM System Settings
@@ -49,16 +51,16 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
 
     # VM CPU Settings
     cores = "1"
-    
+
     # VM Memory Settings
-    memory = "2048" 
+    memory = "2048"
 
     # VM Network Settings
     network_adapters {
         model = "virtio"
         bridge = "vmbr0"
         firewall = "false"
-    } 
+    }
 
     # VM Cloud-Init Settings
     cloud_init = true
@@ -66,18 +68,18 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
 
     # PACKER Boot Commands
     boot_command = [
-        "<esc><wait>",
-        "e<wait>",
-        "<down><down><down><end>",
-        "<bs><bs><bs><bs><wait>",
-        "autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
-        "<f10><wait>"
+      "<esc><wait>",
+      "e<wait>",
+      "<down><wait><down><wait><down><wait><end>",
+      "<bs><bs><bs><wait>",
+      " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
+      "<f10><wait>"
     ]
     boot = "c"
     boot_wait = "5s"
 
     # PACKER Autoinstall Settings
-    http_directory = "./http" 
+    http_directory = "./http"
     #http_bind_address = "REDACTED-IP"
     # (Optional) Bind IP Address and Port
     # http_port_min = 8802
@@ -119,7 +121,7 @@ build {
 
     # Provisioning the VM Template for Cloud-Init Integration in Proxmox #2
     provisioner "file" {
-        source = "files/99-pve.cfg"
+        source = "99-pve.cfg"
         destination = "/tmp/99-pve.cfg"
     }
 
@@ -127,5 +129,4 @@ build {
     provisioner "shell" {
         inline = [ "sudo cp /tmp/99-pve.cfg /etc/cloud/cloud.cfg.d/99-pve.cfg" ]
     }
-
 }

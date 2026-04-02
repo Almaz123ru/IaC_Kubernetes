@@ -19,7 +19,7 @@ Heelo! It's my project fot virtualization in Proxmox using Packer, Terraform and
 ```bash
 cd packer
 packer init .
-packer build -var-file="secret.pkrvars.hcl" ubuntu-server-noble-numbat.pkr.hcl
+packer build -var-file="secret.pkrvars.hcl" ubuntu-server-noble-numbat.pkr.hcl .
 ```
 
 
