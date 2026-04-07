@@ -77,6 +77,10 @@ unzip terraform-provider-proxmox_3.0.2-rc07_linux_amd64.zip
 
 mv terraform-provider-proxmox_v3.0.2-rc07 .terraform/providers/registry.terraform.io/telmate/proxmox/3.0.2/linux_amd64/terraform-provider-proxmox_v3.0.2-rc07
 
+mv LICENSE .terraform/providers/registry.terraform.io/telmate/proxmox/3.0.2/linux_amd64/LICENSE
+
+mv README.md .terraform/providers/registry.terraform.io/telmate/proxmox/3.0.2/linux_amd64/README.md
+
 chmod +x .terraform/providers/registry.terraform.io/telmate/proxmox/3.0.2/linux_amd64/terraform-provider-proxmox_v3.0.2-rc07
 ```
 
