@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "telmate/proxmox"
+      version = ">= 2.9.0"
+    }
+
+    local = {
+      source  = "hashicorp/local"
+      version = ">= 2.0"
+    }
+  }
+}
+
 provider "proxmox" {
   pm_api_url = var.pm_api_url
 
@@ -16,17 +30,16 @@ resource "proxmox_vm_qemu" "master" {
   target_node = var.node
   clone       = var.template_name
 
-  cores  = 2
+  cpu { cores  = 2 }
   memory = 2048
 
   network {
+    id = 0
     model  = "virtio"
     bridge = "vmbr0"
   }
 
-  ipconfig0 = var.network_mode == "dhcp" ?
-    "ip=dhcp" :
-    "ip=${var.master_ips[count.index]}/${var.cidr},gw=${var.gateway}"
+  ipconfig0 = var.network_mode == "dhcp" ? "ip=dhcp" : "ip=${var.master_ips[count.index]}/${var.cidr},gw=${var.gateway}"
 
   sshkeys = file(var.ssh_public_key)
 }
@@ -40,17 +53,17 @@ resource "proxmox_vm_qemu" "workers" {
   target_node = var.node
   clone       = var.template_name
 
-  cores  = 2
+  cpu { cores  = 2 } 
   memory = 2048
+  
 
   network {
+    id = 0
     model  = "virtio"
     bridge = "vmbr0"
   }
 
-  ipconfig0 = var.network_mode == "dhcp" ?
-    "ip=dhcp" :
-    "ip=${var.worker_ips[count.index]}/${var.cidr},gw=${var.gateway}"
+  ipconfig0 = var.network_mode == "dhcp" ? "ip=dhcp" : "ip=${var.worker_ips[count.index]}/${var.cidr},gw=${var.gateway}"
 
   sshkeys = file(var.ssh_public_key)
 }

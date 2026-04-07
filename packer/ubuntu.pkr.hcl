@@ -46,7 +46,7 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
         disk_size = "20G"
         format = "raw"
         storage_pool = "local-lvm"
-        type = "virtio"
+        type = "scsi"
     }
 
     # VM CPU Settings
@@ -71,12 +71,14 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
       "<esc><wait>",
       "e<wait>",
       "<down><wait><down><wait><down><wait><end>",
-      "<bs><bs><bs><wait>",
+      "<bs><bs><wait><bs><bs><bs><wait>",
       " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
       "<f10><wait>"
     ]
-    boot = "c"
-    boot_wait = "5s"
+
+    #First trying to boot to bootdisk, if it doesn't exists, loads ISO and install it to scsio0
+    boot = "order=scsi0;ide2"
+    boot_wait = "10s"
 
     # PACKER Autoinstall Settings
     http_directory = "./http"
