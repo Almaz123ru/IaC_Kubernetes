@@ -29,15 +29,34 @@ resource "proxmox_vm_qemu" "master" {
   name        = "k3s-master-${count.index}"
   target_node = var.node
   clone       = var.template_name
+  full_clone  = true
 
-  cpu { cores  = 2 }
-  memory = 2048
+
+  cpu { cores = 2 }
+  memory      = 2048
+
+  scsihw      = "virtio-scsi-single"
+
+  disks {
+    scsi{
+      scsi0{
+        disk{
+          size    = "20G"
+          storage = "local-lvm"
+        }
+      }
+    }
+  }
+
+
+  agent       = 1
 
   network {
     id = 0
     model  = "virtio"
     bridge = "vmbr0"
   }
+
 
   ipconfig0 = var.network_mode == "dhcp" ? "ip=dhcp" : "ip=${var.master_ips[count.index]}/${var.cidr},gw=${var.gateway}"
 
@@ -52,10 +71,25 @@ resource "proxmox_vm_qemu" "workers" {
   name        = "k3s-worker-${count.index}"
   target_node = var.node
   clone       = var.template_name
+  full_clone  = true
+  scsihw      = "virtio-scsi-single"
 
-  cpu { cores  = 2 } 
-  memory = 2048
-  
+
+  cpu { cores = 2 }
+  memory      = 2048
+
+  agent       = 1
+
+  disks {
+    scsi{
+      scsi0{
+        disk{
+          size    = "20G"
+          storage = "local-lvm"
+        }
+      }
+    }
+  }
 
   network {
     id = 0
