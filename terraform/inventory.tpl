@@ -11,7 +11,3 @@ workers${i+1} ansible_host=${ip}
 [k3s_cluster:children]
 master
 workers
-
-[k3s_cluster:vars]
-ansible_user=ubuntu 
-ansible_become_password=1234

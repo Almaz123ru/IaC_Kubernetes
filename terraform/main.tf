@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "telmate/proxmox"
-      version = ">= 2.9.0"
+      version = "3.0.2-rc07"
     }
 
     local = {
@@ -20,11 +20,10 @@ provider "proxmox" {
 
   pm_tls_insecure = true
 }
-
 # ---------- MASTER ----------
 
 resource "proxmox_vm_qemu" "master" {
-  count       = var.master_count
+  count = var.master_count
 
   name        = "k3s-master-${count.index}"
   target_node = var.node
@@ -55,7 +54,6 @@ resource "proxmox_vm_qemu" "master" {
         }
       }
     }
-
   }
 
 
@@ -76,13 +74,14 @@ resource "proxmox_vm_qemu" "master" {
 # ---------- WORKERS ----------
 
 resource "proxmox_vm_qemu" "workers" {
-  count       = var.worker_count
+  count = var.worker_count
 
   name        = "k3s-worker-${count.index}"
   target_node = var.node
   clone       = var.template_name
   full_clone  = true
   skip_ipv6   = true
+  scsihw      = "virtio-scsi-single"
   cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
   os_type     = "cloud-init"
 
@@ -90,7 +89,6 @@ resource "proxmox_vm_qemu" "workers" {
   memory      = 2048
 
   agent       = 1
-  scsihw      = "virtio-scsi-single"
 
   disks {
     scsi{
@@ -108,7 +106,6 @@ resource "proxmox_vm_qemu" "workers" {
         }
       }
     }
-
   }
 
   network {
