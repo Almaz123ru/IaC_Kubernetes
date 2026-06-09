@@ -104,3 +104,46 @@ terraform {
 ```sh
 rm -rf .terraform/providers/registry.terraform.io/telmate/proxmox/2.9*
 ```
+
+
+# To Do
+## Проблема с ssh
+1. Сделать чтобы генерились ключи в терраформ ssh-keygen -A
+2. systemctl enable ssh
+3. systemctl restart ssh
+
+- Решение :
+cicustom = "user=local:snippets/k3s_ci.yaml"  # /var/lib/vz/snippets/k3s_ci.yml
+
+Содержимое:
+```yml
+#cloud-config
+
+package_update: true
+
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable ssh
+  - systemctl restart ssh
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+```
+
+- *Решение не полное*, после Packer cloud-init выключен, и он не хочет его подключать даже если есть путь.
+Команды чтобы проверить 
+С хоста
+`qm config 105`
+`ls /var/lib/vz/snippets/`
+
+С VM
+`cloud-init status --long` # Должен быть done, а не disabled
+`cat /var/log/cloud-init-output.log`
+
+
+## Проблема с доступом к файлам, с помощью scp
+1. Наверное лучше чтобы был только `root` пользователь
+2. Или положить и ssh public keys и root пользователю, хотя зачем пользователь убунту? Не понятно
+
+## Нет 

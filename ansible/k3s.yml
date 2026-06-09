@@ -1,0 +1,35 @@
+- hosts: master
+  become: yes
+  tasks:
+
+  - name: Open port 6443 (ufw)
+    ansible.builtin.shell: |
+      if command -v ufw >/dev/null 2>&1; then
+        ufw allow 6443/tcp
+      fi
+
+  - name: Install k3s server
+    shell: |
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-name {{ inventory_hostname }}" sh -
+    args:
+      creates: /usr/local/bin/k3s
+
+  - name: Get node token
+    shell: cat /var/lib/rancher/k3s/server/node-token
+    register: token
+
+  - name: Save token
+    set_fact:
+      node_token: "{{ token.stdout }}"
+
+
+- hosts: workers
+  become: yes
+  tasks:
+
+  - name: Join cluster
+    shell: |
+      curl -sfL https://get.k3s.io | \
+      K3S_URL=https://{{ hostvars[groups['master'][0]]['ansible_host'] }}:6443 \
+      K3S_TOKEN={{ hostvars[groups['master'][0]]['node_token'] }} \
+      INSTALL_K3S_EXEC="--node-name {{ inventory_hostname }}" sh -

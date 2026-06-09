@@ -1,0 +1,15 @@
+#cloud-config 
+#Should be at /var/lib/vz/snippets/k3s_ci.yml
+
+package_update: true
+
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - ssh-keygen -A
+  - systemctl enable ssh
+  - systemctl restart ssh
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - reboot 

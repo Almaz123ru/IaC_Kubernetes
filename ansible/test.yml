@@ -1,0 +1,73 @@
+---
+- name: Setup K3S master
+  hosts: master
+  become: yes
+
+  vars:
+    api_port: 6443
+
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: curl
+        state: present
+        update_cache: yes
+
+    - name: Install K3S server
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-name {{ inventory_hostname }}" sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Wait for node token
+      wait_for:
+        path: /var/lib/rancher/k3s/server/node-token
+        timeout: 60
+
+    - name: Read node token
+      slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: token_raw
+
+    - name: Save token
+      set_fact:
+        k3s_token: "{{ token_raw.content | b64decode | trim }}"
+
+    - name: Share token with workers
+      add_host:
+        name: "k3s_token_holder"
+        token: "{{ k3s_token }}"
+
+    - name: Enable kubectl for user
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/{{ ansible_user }}/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        mode: "0600"
+      ignore_errors: yes
+
+
+- name: Setup K3S workers
+  hosts: workers
+  become: yes
+
+  vars:
+    master_ip: "{{ hostvars[groups['master'][0]].ansible_host }}"
+    token: "{{ hostvars['k3s_token_holder'].token }}"
+
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: curl
+        state: present
+        update_cache: yes
+
+    - name: Install K3S agent
+      shell: |
+        curl -sfL https://get.k3s.io | \
+        K3S_URL=https://{{ master_ip }}:6443 \
+        K3S_TOKEN={{ token }} \
+        INSTALL_K3S_EXEC="--node-name {{ inventory_hostname }}" sh -
+      args:
+        creates: /usr/local/bin/k3s-agent

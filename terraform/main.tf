@@ -24,13 +24,15 @@ provider "proxmox" {
 # ---------- MASTER ----------
 
 resource "proxmox_vm_qemu" "master" {
-  count = var.master_count
+  count       = var.master_count
 
   name        = "k3s-master-${count.index}"
   target_node = var.node
   clone       = var.template_name
   full_clone  = true
-
+  skip_ipv6   = true
+  cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
+  os_type     = "cloud-init"
 
   cpu { cores = 2 }
   memory      = 2048
@@ -46,6 +48,14 @@ resource "proxmox_vm_qemu" "master" {
         }
       }
     }
+    ide {
+      ide2 {
+        cloudinit {
+          storage = "local-lvm"
+        }
+      }
+    }
+
   }
 
 
@@ -66,19 +76,21 @@ resource "proxmox_vm_qemu" "master" {
 # ---------- WORKERS ----------
 
 resource "proxmox_vm_qemu" "workers" {
-  count = var.worker_count
+  count       = var.worker_count
 
   name        = "k3s-worker-${count.index}"
   target_node = var.node
   clone       = var.template_name
   full_clone  = true
-  scsihw      = "virtio-scsi-single"
-
+  skip_ipv6   = true
+  cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
+  os_type     = "cloud-init"
 
   cpu { cores = 2 }
   memory      = 2048
 
   agent       = 1
+  scsihw      = "virtio-scsi-single"
 
   disks {
     scsi{
@@ -89,6 +101,14 @@ resource "proxmox_vm_qemu" "workers" {
         }
       }
     }
+    ide {
+      ide2 {
+        cloudinit {
+          storage = "local-lvm"
+        }
+      }
+    }
+
   }
 
   network {
