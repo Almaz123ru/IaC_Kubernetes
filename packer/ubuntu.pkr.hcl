@@ -1,7 +1,8 @@
 packer {
+  required_version = ">= 1.10.0"
   required_plugins {
     name = {
-      version = "~> 1"
+      version = "~> 1.2.0"
       source  = "github.com/hashicorp/proxmox"
     }
   }
@@ -11,124 +12,141 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
 
     # Proxmox Connection Settings
     proxmox_url = var.proxmox_api_url
-    username = var.proxmox_api_token_id
-    token = var.proxmox_api_token_secret
+    username    = var.proxmox_api_token_id
+    token       = var.proxmox_api_token_secret
+    node        = "pve"
 
     # (Optional) Skip TLS Verification
     insecure_skip_tls_verify = true
 
     # VM General Settings
-    node                 = "pve"
-    vm_name              = "ubuntu-24-template"
-    template_description = "ubuntu-24-cloudinit-template"
+    vm_id                = 9000
+    vm_name              = "packer-ubuntu-2604"
+    template_name        = "packer-ubuntu2604-template"
+    template_description = "ubuntu-26-cloudinit-template"
+    tags                 = "ubuntu;2604;template"
+    
 
-    # VM OS Settings
-    # (Option 1) Local ISO File
-    boot_iso{
-        # VM OS Settings
-        # (Option 1) Local ISO File
-        iso_file         = "local:iso/ubuntu-24.04.4-live-server-amd64.iso"
-        iso_storage_pool = "local"
-    }
-        # - or -
-    # (Option 2) Download ISO
-    # iso_url = "https://releases.ubuntu.com/22.04/ubuntu-22.04-live-server-amd64.iso"
-    # iso_checksum = "84aeaf7823c8c61baa0ae862d0a06b03409394800000b3235854a6b38eb4856f"
-    template_name        = "packer-ubuntu2404"
-
-    # VM System Settings
-    qemu_agent = true
-
-    # VM Hard Disk Settings
-    scsi_controller = "virtio-scsi-pci"
+    bios            = local.bios
+    machine         = local.machine
+    os              = local.os_type
+    cpu_type        = local.cpu_type
+    cores           = 2
+    sockets         = local.cpu_sockets
+    memory          = 2048
+    scsi_controller = local.scsi_controller   # "virtio-scsi-pci"
+    qemu_agent      = local.qemu_agent
+    boot            = local.boot_order  # "order=scsi0;ide2"
 
     disks {
-        disk_size = "20G"
-        format = "raw"
+        disk_size    = "20G"
         storage_pool = "local-lvm"
-        type = "scsi"
+        type         = local.disk_type
+        format       = local.disk_format
+        io_thread    = local.disk_io_thread
+        discard      = local.disk_discard
+        ssd          = local.disk_ssd
     }
 
-    # VM CPU Settings
-    cores = "1"
-
-    # VM Memory Settings
-    memory = "2048"
-
-    # VM Network Settings
     network_adapters {
         model = "virtio"
         bridge = "vmbr0"
         firewall = "false"
+        vlan_tag = ""
     }
 
-    # VM Cloud-Init Settings
-    cloud_init = true
-    cloud_init_storage_pool = "local-lvm"
 
+    # (Option 1) Local ISO File
+    boot_iso{
+        # VM OS Settings
+        # (Option 1) Local ISO File
+        iso_file         = "local:iso/ubuntu-26.04.1-live-server-amd64.iso"
+        iso_storage_pool = "local"
+    }
+        # - or -
+    # (Option 2) Download ISO
+    # boot_iso {
+    #    type              = local.boot_iso_type
+    #    index             = local.boot_iso_index
+    #    iso_url           = "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-live-server-amd64.iso"
+    #    iso_checksum      = "cc8a95cde20f6ced61a322420de00f10cc3c90ced545daa46cb9c1a117f1d927"
+    #    iso_storage_pool  = "local"
+    #    iso_download_pve  = true
+    #    unmount           = local.boot_iso_unmount
+    #    keep_cdrom_device = local.boot_iso_keep_cdrom
+    # }
+
+    http_bind_address = "0.0.0.0"
+    http_content = {
+        "/user-data" = templatefile("${path.root}/http/user-data.pkrtpl", {
+        build_hostname      = "ubuntu-2604-template"
+        build_username      = "ubuntu"
+        build_password_hash = var.build_password_hash
+        timezone            = "Europe/Moscow"
+        build_network_mode  = "dhcp"
+        build_ip_cidr       = "10.0.0.50/24"
+        build_gateway       = "10.0.0.1"
+        ssh_authorized_keys = [local.ssh_public_key]
+        })
+        "/meta-data" = templatefile("${path.root}/http/meta-data.pkrtpl", {
+        build_hostname = "ubuntu-2604-template"
+        })
+    }
+
+    boot_wait = "10s"
+    boot_key_interval = local.boot_key_interval
     # PACKER Boot Commands
     boot_command = [
-      "<esc><wait>",
+      "<wait><esc><wait>",
       "e<wait>",
       "<down><wait><down><wait><down><wait><end>",
       "<bs><bs><wait><bs><bs><bs><wait>",
-      " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
+      " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
       "<f10><wait>"
     ]
 
     #First trying to boot to bootdisk, if it doesn't exists, loads ISO and install it to scsio0
-    boot = "order=scsi0;ide2"
-    boot_wait = "10s"
 
-    # PACKER Autoinstall Settings
-    http_directory = "./http"
-    #http_bind_address = "REDACTED-IP"
-    # (Optional) Bind IP Address and Port
-    # http_port_min = 8802
-    # http_port_max = 8802
 
-    ssh_username = "ubuntu"
+    ssh_username           = "ubuntu"
+    ssh_timeout            = "20m"
+    ssh_handshake_attempts = local.ssh_handshake_attempts
 
-    # (Option 1) Add your Password here
-    # ssh_password = "REDACTED-PASSWORD"
+    # (Option 1) Password
+    # ssh_password           = var.build_password
     # - or -
-    # (Option 2) Add your Private SSH KEY file here
+    # (Option 2) Private SSH KEY file here
     ssh_private_key_file = "~/.ssh/id_rsa"
 
     # Raise the timeout, when installation takes longer
-    ssh_timeout = "20m"
+    
+
+    cloud_init                          = local.cloud_init
+    loud_init_disk_type                 = local.cloud_init_disk_type
+    cloud_init_storage_pool             = local.cloud_init_storage_pool
+    cloud_init_disable_upgrade_packages = local.cloud_init_disable_upgrade_packages
 }
 
 # Build Definition to create the VM Template
 build {
+    name    = "ubuntu-2604"
+    sources = ["source.proxmox-iso.ubuntu"]
 
-    name = "ubuntu-server-noble-numbat"
-    sources = ["proxmox-iso.ubuntu-server-noble-numbat"]
-
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #1
     provisioner "shell" {
-        inline = [
-            "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
-            "sudo rm /etc/ssh/ssh_host_*",
-            "sudo truncate -s 0 /etc/machine-id",
-            "sudo apt -y autoremove --purge",
-            "sudo apt -y clean",
-            "sudo apt -y autoclean",
-            "sudo cloud-init clean",
-            "sudo rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg",
-            "sudo rm -f /etc/netplan/00-installer-config.yaml",
-            "sudo sync"
+        execute_command = "sudo -E sh -eux '{{.Path}}'"
+        environment_vars = [
+        "BUILD_USER=${var.build_username}",
         ]
+        scripts = [
+        "${path.root}/scripts/00-wait-cloud-init.sh",
+        "${path.root}/scripts/10-provision.sh",
+        "${path.root}/scripts/99-cleanup.sh",
+        ]
+        timeout = "45m"
     }
 
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #2
-    provisioner "file" {
-        source = "99-pve.cfg"
-        destination = "/tmp/99-pve.cfg"
-    }
-
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #3
-    provisioner "shell" {
-        inline = [ "sudo cp /tmp/99-pve.cfg /etc/cloud/cloud.cfg.d/99-pve.cfg" ]
+    post-processor "manifest" {
+        output     = "${path.root}/manifest.json"
+        strip_path = true
     }
 }

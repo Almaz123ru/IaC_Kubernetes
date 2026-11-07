@@ -4,29 +4,67 @@ autoinstall:
   locale: en_US
   keyboard:
     layout: us
+  timezone: ${timezone}
+
+  refresh-installer:
+    update: false
+  updates: security
+
   ssh:
     install-server: true
     allow-pw: true
-    disable_root: true
-    ssh_quiet_keygen: true
-    allow_public_ssh_keys: true
-  packages:
-    - qemu-guest-agent
-    - sudo
+  %{ for key in ssh_authorized_keys ~}
+    - ${key}
+  %{ endfor ~}
+
+  identity:
+    hostname: ${build_hostname}
+    username: ${build_username}
+    password: "${build_password_hash}"
+
+  network:
+    version: 2
+    ethernets:
+      primary:
+        match:
+          name: "en*"
+        optional: true
+%{ if build_network_mode == "static" ~}
+        addresses:
+          - ${build_ip_cidr}
+        routes:
+          - to: default
+            via: ${build_gateway}
+%{ else ~}
+        dhcp4: true
+        dhcp6: false
+%{ endif ~}
+
   storage:
-    layout:
-      name: direct
     swap:
       size: 0
+    layout:
+      name: direct
+
+  packages:
+    - qemu-guest-agent
+    - cloud-init
+    - cloud-guest-utils
+    - chrony
+    - curl
+    - ca-certificates
+    - jq
+    - sudo
+    - openssh-server
+
+  late-commands:
+    # Packer подключается по паролю и выполняет provisioner-скрипты через sudo.
+    - curtin in-target --target=/target -- bash -c "echo '${build_username} ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/90-${build_username} && chmod 0440 /etc/sudoers.d/90-${build_username}"
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+    - curtin in-target --target=/target -- systemctl enable ssh
+    - curtin in-target --target=/target -- systemctl enable cloud-init
+
   user-data:
+    disable_root: true
+    ssh_pwauth: true
     package_upgrade: false
-    timezone: Asia/Yekaterinburg
-    users:
-      - name: ubuntu
-        ssh_authorized_keys:
-          - "YOUR_PUBLIC_SSH_KEY_FROM_PROXMOX"
-        passwd: "YOUR_HASHED_PASSWD"
-        groups: [adm, sudo]
-        lock_passwd: false
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        shell: /bin/bash
