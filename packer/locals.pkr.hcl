@@ -1,7 +1,7 @@
 # Инварианты шаблона. Это не пользовательские настройки: они должны
 # совпадать с тем, как собирается и используется образ.
 locals {
-  ssh_public_key = trimspace(file(pathexpand(var.ssh_public_key_file)))
+  ssh_public_key = trimspace(file(pathexpand(var.ssh_public_key)))
   build_ip       = split("/", var.build_ip_cidr)[0]
 
   cpu_type        = "x86-64-v2-AES"
