@@ -22,7 +22,6 @@ rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
 systemctl enable qemu-guest-agent
 systemctl enable chrony
 systemctl enable ssh
-systemctl enable cloud-init
 
 # Страховка: пакет агента должен быть реально установлен.
 dpkg -s qemu-guest-agent >/dev/null
