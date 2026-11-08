@@ -103,7 +103,7 @@ source "proxmox-iso" "ubuntu" {
       "e<wait>",
       "<down><wait><down><wait><down><wait><end>",
       "<bs><bs><wait><bs><bs><bs><wait>",
-      " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
+      " autoinstall ds=nocloud\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
       "<f10><wait>"
     ]
 
