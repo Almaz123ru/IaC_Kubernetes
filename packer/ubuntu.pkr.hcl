@@ -2,7 +2,7 @@ packer {
   required_version = ">= 1.10.0"
   required_plugins {
     name = {
-      version = "~> 1.2.0"
+      version = "1.2.4"
       source  = "github.com/hashicorp/proxmox"
     }
   }
@@ -51,17 +51,19 @@ source "proxmox-iso" "ubuntu" {
     network_adapters {
         model = "virtio"
         bridge = "vmbr0"
-        firewall = "false"
+        firewall = false
         vlan_tag = ""
     }
 
 
     # (Option 1) Local ISO File
     boot_iso{
-        # VM OS Settings
-        # (Option 1) Local ISO File
+        type              = local.boot_iso_type
+        index             = local.boot_iso_index
         iso_file         = "local:iso/ubuntu-26.04.1-live-server-amd64.iso"
         iso_storage_pool = "local"
+        unmount           = local.boot_iso_unmount
+        keep_cdrom_device = local.boot_iso_keep_cdrom
     }
         # - or -
     # (Option 2) Download ISO

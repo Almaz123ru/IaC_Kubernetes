@@ -11,9 +11,26 @@ variable "proxmox_api_token_secret" {
   sensitive = true
 }
 
+variable "build_password_hash" {
+  type      = string
+  sensitive = true
+}
+
+variable "build_password" {
+  type        = string
+  description = "Не используется при ssh_private_key_file; оставлено для совместимости secret-файла."
+  default     = ""
+  sensitive   = true
+}
+
 variable "ssh_public_key" {
   default = "~/.ssh/id_rsa.pub"
   type = string
+}
+
+variable "ssh_private_key_file" {
+  type    = string
+  default = "~/.ssh/id_rsa"
 }
 
 

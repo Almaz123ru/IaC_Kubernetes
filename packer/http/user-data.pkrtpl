@@ -1,7 +1,7 @@
 #cloud-config
 autoinstall:
   version: 1
-  locale: en_US
+  locale: en_US.UTF-8
   keyboard:
     layout: us
   timezone: ${timezone}
@@ -13,9 +13,10 @@ autoinstall:
   ssh:
     install-server: true
     allow-pw: true
-  %{ for key in ssh_authorized_keys ~}
-    - ${key}
-  %{ endfor ~}
+    authorized-keys:
+%{ for key in ssh_authorized_keys ~}
+      - ${key}
+%{ endfor ~}
 
   identity:
     hostname: ${build_hostname}
