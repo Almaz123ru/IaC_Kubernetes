@@ -107,9 +107,6 @@ source "proxmox-iso" "ubuntu" {
       "<f10><wait>"
     ]
 
-    #First trying to boot to bootdisk, if it doesn't exists, loads ISO and install it to scsio0
-
-
     ssh_username           = "ubuntu"
     ssh_timeout            = "20m"
     ssh_handshake_attempts = local.ssh_handshake_attempts
@@ -124,7 +121,7 @@ source "proxmox-iso" "ubuntu" {
     
 
     cloud_init                          = local.cloud_init
-    cloud_init_disk_type                 = local.cloud_init_disk_type
+    cloud_init_disk_type                = local.cloud_init_disk_type
     cloud_init_storage_pool             = local.cloud_init_storage_pool
     cloud_init_disable_upgrade_packages = local.cloud_init_disable_upgrade_packages
 }

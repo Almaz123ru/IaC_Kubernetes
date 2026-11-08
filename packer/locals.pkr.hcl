@@ -11,7 +11,7 @@ locals {
   cpu_sockets     = 1
   scsi_controller = "virtio-scsi-single"
   qemu_agent      = true
-  boot_order      = "order=ide2;scsi0"
+  boot_order      = "order=scsi0;ide2"
 
   disk_type      = "scsi"
   disk_format    = "raw"
