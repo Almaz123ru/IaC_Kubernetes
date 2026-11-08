@@ -11,6 +11,12 @@ variable "proxmox_api_token_secret" {
   sensitive = true
 }
 
+variable "build_username" {
+  type        = string
+  description = "Пользователь, создаваемый autoinstall."
+  default     = "ubuntu"
+}
+
 variable "build_password_hash" {
   type      = string
   sensitive = true
