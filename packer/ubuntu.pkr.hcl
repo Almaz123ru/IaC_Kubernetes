@@ -8,7 +8,7 @@ packer {
   }
 }
 
-source "proxmox-iso" "ubuntu-server-noble-numbat" {
+source "proxmox-iso" "ubuntu" {
 
     # Proxmox Connection Settings
     proxmox_url = var.proxmox_api_url
@@ -122,7 +122,7 @@ source "proxmox-iso" "ubuntu-server-noble-numbat" {
     
 
     cloud_init                          = local.cloud_init
-    loud_init_disk_type                 = local.cloud_init_disk_type
+    cloud_init_disk_type                 = local.cloud_init_disk_type
     cloud_init_storage_pool             = local.cloud_init_storage_pool
     cloud_init_disable_upgrade_packages = local.cloud_init_disable_upgrade_packages
 }
