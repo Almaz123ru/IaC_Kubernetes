@@ -23,6 +23,12 @@ variable "ssh_public_key" {
   default = "~/.ssh/id_rsa.pub"
 }
 
+variable "vm_password" {
+  description = "Пароль пользователя ubuntu (cloud-init)."
+  sensitive   = true
+  default     = ""
+}
+
 # --- K3S cluster ---
 variable "master_count" {
   default = 1

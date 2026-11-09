@@ -25,13 +25,18 @@ provider "proxmox" {
 resource "proxmox_vm_qemu" "master" {
   count = var.master_count
 
-  name        = "k3s-master-${count.index}"
+  name        = "k8s-master-${count.index}"
   target_node = var.node
   clone       = var.template_name
   full_clone  = true
   skip_ipv6   = true
-  cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
+  # cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
   os_type     = "cloud-init"
+
+  ciuser     = "ubuntu"
+  cipassword = var.vm_password
+  ciupgrade  = false
+
 
   cpu { cores = 2 }
   memory      = 2048
@@ -43,14 +48,14 @@ resource "proxmox_vm_qemu" "master" {
       scsi0{
         disk{
           size    = "20G"
-          storage = "local-lvm"
+          storage = "ssd"
         }
       }
     }
     ide {
-      ide2 {
+      ide0 {
         cloudinit {
-          storage = "local-lvm"
+          storage = "ssd"
         }
       }
     }
@@ -76,14 +81,18 @@ resource "proxmox_vm_qemu" "master" {
 resource "proxmox_vm_qemu" "workers" {
   count = var.worker_count
 
-  name        = "k3s-worker-${count.index}"
+  name        = "k8s-worker-${count.index}"
   target_node = var.node
   clone       = var.template_name
   full_clone  = true
   skip_ipv6   = true
   scsihw      = "virtio-scsi-single"
-  cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
+  # cicustom    = "user=local:snippets/k3s_ci.yml"  # /var/lib/vz/snippets/k3s_ci.yml
   os_type     = "cloud-init"
+
+  ciuser     = "ubuntu"
+  cipassword = var.vm_password
+  ciupgrade  = false
 
   cpu { cores = 2 }
   memory      = 2048
@@ -95,14 +104,14 @@ resource "proxmox_vm_qemu" "workers" {
       scsi0{
         disk{
           size    = "20G"
-          storage = "local-lvm"
+          storage = "ssd"
         }
       }
     }
     ide {
-      ide2 {
+      ide0 {
         cloudinit {
-          storage = "local-lvm"
+          storage = "ssd"
         }
       }
     }
