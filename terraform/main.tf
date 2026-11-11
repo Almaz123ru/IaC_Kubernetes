@@ -38,8 +38,8 @@ resource "proxmox_vm_qemu" "master" {
   ciupgrade  = false
 
 
-  cpu { cores = 2 }
-  memory      = 2048
+  cpu { cores = 3 }
+  memory      = 8192
 
   scsihw      = "virtio-scsi-single"
 
@@ -95,7 +95,7 @@ resource "proxmox_vm_qemu" "workers" {
   ciupgrade  = false
 
   cpu { cores = 2 }
-  memory      = 2048
+  memory      = 3072
 
   agent       = 1
 

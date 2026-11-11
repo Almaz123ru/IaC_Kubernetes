@@ -1,13 +1,12 @@
-[master]
+[kube_control_plane]
 %{ for ip in masters ~}
-master ansible_host=${ip}
+node1 ansible_host=${ip} ip=${ip} etcd_member_name=etcd1 ansible_user=ubuntu
 %{ endfor }
 
-[workers]
-%{ for i, ip in workers ~}
-workers${i+1} ansible_host=${ip}
-%{ endfor }
+[etcd:children]
+kube_control_plane
 
-[k3s_cluster:children]
-master
-workers
+[kube_node]
+%{ for i, ip in node ~}
+node${i+2} ansible_host=${ip} ip=${ip} ansible_user=ubuntu
+%{ endfor }
