@@ -133,7 +133,7 @@ resource "proxmox_vm_qemu" "workers" {
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tpl", {
     masters = proxmox_vm_qemu.master[*].default_ipv4_address
-    workers = proxmox_vm_qemu.workers[*].default_ipv4_address
+    node = proxmox_vm_qemu.workers[*].default_ipv4_address
   })
 
   filename = "../ansible/inventory.ini"
